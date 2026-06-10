@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 
-# 1. Fetch raylib (Switching to master bypasses the version error entirely)
+# 1. Fetch raylib
 FetchContent_Declare(
     raylib
     GIT_REPOSITORY https://github.com/raysan5/raylib.git
@@ -21,8 +21,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(raygui)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(COGNIFY ${SOURCES})
+# Explicitly list your actual source files (Remove MatchTwo.cpp if it's gone!)
+add_executable(COGNIFY 
+    src/main.cpp
+    src/Tests/TypingTest.cpp
+    src/Tests/StroopTest.cpp
+    src/Tests/ReactionTime.cpp
+    src/Tests/VerbalTest.cpp
+    src/Tests/NumberMemory.cpp
+)
 
 target_include_directories(COGNIFY PRIVATE 
     src/

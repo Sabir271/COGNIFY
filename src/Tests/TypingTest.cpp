@@ -46,7 +46,6 @@ public:
         for (int i = 0; s[i] && len < 62; i++) buf[len++] = s[i];
         buf[len] = '\0';
     }
-    // Returns the character just typed (0 if none or backspace)
     int update() {
         backspacedEmpty = false;
         if (IsKeyPressed(KEY_BACKSPACE)) {
@@ -60,7 +59,6 @@ public:
             buf[len++] = c; buf[len] = '\0';
             typed = c;
         }
-        // drain extra chars in same frame (shouldn't happen but keep clean)
         while (GetCharPressed()) {}
         return typed;
     }
@@ -77,7 +75,6 @@ public:
     void  recordKey(bool ok)        { ok ? correctKeys++ : wrongKeys++; }
     void  recordWord()              { correctWords++; }
     float wpm(float s)        const { return s > 0 ? correctWords / (s / 60.f) : 0.f; }
-    // accuracy = correct keystrokes out of all keystrokes ever typed
     float accuracy()          const {
         int t = correctKeys + wrongKeys;
         return t ? correctKeys * 100.f / t : 100.f;
@@ -121,7 +118,7 @@ class TypingTest {
             bool cur = (i == wb.index());
             Color col = cur ? YELLOW : LIGHTGRAY;
             if (cur) {
-                Color hi = {255, 255, 0, 40};   // semi-transparent yellow, no ColorAlpha()
+                Color hi = {255, 255, 0, 40};   
                 DrawRectangle(x-2, y-2, MeasureText(w, 22)+4, 26, hi);
             }
             DrawText(w, x, y, 22, col);
@@ -132,7 +129,6 @@ class TypingTest {
     }
 
     void drawInput() {
-        // DrawRectangleLines(x, y, width, height, Color) — no thickness arg
         DrawRectangleLines(50, 290, SW - 100, 55, WHITE);
         char p[64];
         sprintf(p, "Type: %s", wb.current());
@@ -144,12 +140,14 @@ class TypingTest {
     }
 
 public:
-    TypingTest() { srand((unsigned)time(0)); state = WAIT; }
+    TypingTest() { state = WAIT; }
 
     void update() {
         float dt = GetFrameTime();
         if (state == WAIT) {
-            if (GetKeyPressed() || GetCharPressed()) {
+            // Filter out ESC key so it doesn't accidentally trigger a game start when exiting
+            int key = GetKeyPressed();
+            if ((key != 0 && key != KEY_ESCAPE) || GetCharPressed()) {
                 input.clear(); stats.reset(); wb.generate();
                 timer.reset(); timer.start(); state = PLAY;
             }
@@ -159,7 +157,6 @@ public:
 
             int typed = input.update();
             if (typed != 0) {
-                // position of this new char in the word = current input length - 1
                 int pos = (int)strlen(input.text()) - 1;
                 const char* target = wb.current();
                 bool ok = (target[pos] != '\0' && typed == target[pos]);
@@ -175,6 +172,9 @@ public:
         BeginDrawing();
         Color bg = {18, 18, 24, 255};
         ClearBackground(bg);
+
+        // UI Anchor Tip
+        DrawText("Press ESC to Exit to Main Menu", 20, 15, 16, GRAY);
 
         if (state == WAIT) {
             const char* msg = "Press any key to start the 30-second test!";
@@ -210,11 +210,17 @@ public:
     }
 };
 
-int main() {
-    InitWindow(SW, SH, "Typing Test");
-    SetTargetFPS(60);
+// WRITE/EDIT YOUR CODES ABOVE THIS LINE ONLY DO NOT EDIT THIS BLOCK OF CODE!!!
+void RunTypingTest() {
+    // Dynamic resizing window trick to fit the text design gracefully
+    SetWindowSize(1000, 600); 
     TypingTest game;
-    while (!WindowShouldClose()) { game.update(); game.draw(); }
-    CloseWindow();
-    return 0;
+    
+    while (!WindowShouldClose()) {
+        // Look for the absolute exit flag
+        if (IsKeyPressed(KEY_ESCAPE)) break; 
+        
+        game.update();
+        game.draw();
+    }
 }

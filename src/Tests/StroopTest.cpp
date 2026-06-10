@@ -2,21 +2,16 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Global Window Constants
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 const int COLOR_COUNT = 5;
 
-// Game States
 enum GameState {
     STATE_START,
     STATE_PLAYING,
     STATE_GAMEOVER
 };
 
-// ==========================================
-// THE ULTIMATE SIMPLE COLOR HELPER
-// ==========================================
 Color MakeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a) {
     Color c;
     c.r = r;
@@ -26,7 +21,6 @@ Color MakeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char
     return c;
 }
 
-// Simple text mapping
 const char* GetColorName(int id) {
     switch (id) {
         case 0: return "RED";
@@ -38,21 +32,17 @@ const char* GetColorName(int id) {
     }
 }
 
-// Returns custom safe colors using our helper function
 Color GetColorValue(int id) {
     switch (id) {
-        case 0: return MakeColor(230, 41, 55, 255);   // Red
-        case 1: return MakeColor(0, 121, 242, 255);   // Blue
-        case 2: return MakeColor(0, 228, 48, 255);    // Green
-        case 3: return MakeColor(253, 249, 0, 255);   // Yellow
-        case 4: return MakeColor(200, 122, 255, 255); // Purple
-        default: return MakeColor(0, 0, 0, 255);      // Black
+        case 0: return MakeColor(230, 41, 55, 255);   
+        case 1: return MakeColor(0, 121, 242, 255);   
+        case 2: return MakeColor(0, 228, 48, 255);    
+        case 3: return MakeColor(253, 249, 0, 255);   
+        case 4: return MakeColor(200, 122, 255, 255); 
+        default: return MakeColor(0, 0, 0, 255);      
     }
 }
 
-// ==========================================
-// 1. BUTTON CLASS
-// ==========================================
 class ColorButton {
 private:
     Rectangle bounds;
@@ -61,21 +51,14 @@ private:
 
 public:
     ColorButton() {
-        bounds.x = 0.0f;
-        bounds.y = 0.0f;
-        bounds.width = 0.0f;
-        bounds.height = 0.0f;
+        bounds.x = 0.0f; bounds.y = 0.0f; bounds.width = 0.0f; bounds.height = 0.0f;
         buttonColor = MakeColor(0, 0, 0, 255); 
         colorId = -1;
     }
 
     void Setup(float x, float y, float width, float height, int id, Color color) {
-        bounds.x = x;
-        bounds.y = y;
-        bounds.width = width;
-        bounds.height = height;
-        colorId = id;
-        buttonColor = color;
+        bounds.x = x; bounds.y = y; bounds.width = width; bounds.height = height;
+        colorId = id; buttonColor = color;
     }
 
     int GetColorId() { return colorId; }
@@ -91,9 +74,6 @@ public:
     }
 };
 
-// ==========================================
-// 2. STROOP GAME CLASS
-// ==========================================
 class StroopGame {
 private:
     ColorButton buttons[COLOR_COUNT];
@@ -104,7 +84,6 @@ private:
     bool showFeedback;
     bool lastAnswerCorrect;
     float feedbackTimer;
-
     float timeRemaining;
     GameState currentScene; 
 
@@ -123,17 +102,11 @@ private:
 public:
     StroopGame() {
         currentScene = STATE_START; 
-        score = 0;
-        totalTrials = 0;
-        showFeedback = false;
-        lastAnswerCorrect = false;
-        feedbackTimer = 0.0f;
-        timeRemaining = 30.0f;
+        score = 0; totalTrials = 0;
+        showFeedback = false; lastAnswerCorrect = false;
+        feedbackTimer = 0.0f; timeRemaining = 30.0f;
 
-        float btnWidth = 110.0f;
-        float btnHeight = 60.0f;
-        float spacing = 20.0f;
-        
+        float btnWidth = 110.0f; float btnHeight = 60.0f; float spacing = 20.0f;
         float totalWidth = (COLOR_COUNT * btnWidth) + ((COLOR_COUNT - 1) * spacing);
         float startX = (SCREEN_WIDTH - totalWidth) / 2.0f;
         float btnY = 450.0f;
@@ -145,12 +118,9 @@ public:
     }
 
     void StartNewSession() {
-        score = 0;
-        totalTrials = 0;
-        showFeedback = false;
-        lastAnswerCorrect = false;
-        feedbackTimer = 0.0f;
-        timeRemaining = 30.0f; 
+        score = 0; totalTrials = 0;
+        showFeedback = false; lastAnswerCorrect = false;
+        feedbackTimer = 0.0f; timeRemaining = 30.0f; 
         currentScene = STATE_PLAYING;
         NextTrial();
     }
@@ -158,12 +128,10 @@ public:
     void Update() {
         switch (currentScene) {
             case STATE_START:
-                if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) {
-                    StartNewSession();
-                }
+                if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) StartNewSession();
                 break;
 
-            case STATE_PLAYING: {  // FIXED: Added opening brace for scope isolation
+            case STATE_PLAYING: {
                 timeRemaining -= GetFrameTime();
                 if (timeRemaining <= 0.0f) {
                     timeRemaining = 0.0f;
@@ -174,8 +142,7 @@ public:
                 if (showFeedback) {
                     feedbackTimer += GetFrameTime();
                     if (feedbackTimer >= 0.35f) { 
-                        showFeedback = false;
-                        feedbackTimer = 0.0f;
+                        showFeedback = false; feedbackTimer = 0.0f;
                         NextTrial(); 
                     }
                     return; 
@@ -184,12 +151,9 @@ public:
                 Vector2 mousePos = GetMousePosition();
                 for (int i = 0; i < COLOR_COUNT; i++) {
                     if (buttons[i].IsClicked(mousePos)) {
-                        totalTrials++;
-                        showFeedback = true;
-
+                        totalTrials++; showFeedback = true;
                         if (buttons[i].GetColorId() == currentColorIdx) {
-                            score++;
-                            lastAnswerCorrect = true;
+                            score++; lastAnswerCorrect = true;
                         } else {
                             lastAnswerCorrect = false;
                         }
@@ -197,12 +161,10 @@ public:
                     }
                 }
                 break;
-            } // FIXED: Added closing brace for scope isolation
+            }
 
             case STATE_GAMEOVER:
-                if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) {
-                    StartNewSession();
-                }
+                if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) StartNewSession();
                 break;
         }
     }
@@ -211,8 +173,10 @@ public:
         BeginDrawing();
         ClearBackground(MakeColor(17, 17, 24, 255)); 
 
+        // UI Anchor Tip
+        DrawText("Press ESC to Exit to Main Menu", 20, 10, 14, MakeColor(120, 120, 120, 255));
+
         if (currentScene == STATE_START) {
-            // SCENE: WELCOME START SCREEN
             DrawText("STROOP COGNITIVE TEST", SCREEN_WIDTH / 2 - MeasureText("STROOP COGNITIVE TEST", 38) / 2, 140, 38, MakeColor(253, 249, 0, 255));
             DrawLine(100, 200, SCREEN_WIDTH - 100, 200, MakeColor(45, 45, 61, 255));
 
@@ -230,12 +194,10 @@ public:
             DrawText("Press [ENTER] or [SPACE] to Begin", SCREEN_WIDTH / 2 - MeasureText("Press [ENTER] or [SPACE] to Begin", 24) / 2, 470, 24, MakeColor(0, 228, 48, 255));
 
         } else if (currentScene == STATE_GAMEOVER) {
-            // SCENE: EVALUATION SCORE SCREEN
             DrawText("TEST COMPLETE", SCREEN_WIDTH / 2 - MeasureText("TEST COMPLETE", 36) / 2, 100, 36, MakeColor(253, 249, 0, 255));
             DrawLine(150, 160, SCREEN_WIDTH - 150, 160, MakeColor(45, 45, 61, 255));
 
             float finalAccuracy = (totalTrials > 0) ? ((float)score / totalTrials) * 100.0f : 0.0f;
-
             const char* finalScoreStr = TextFormat("Correct Answers: %d", score);
             const char* totalAttemptsStr = TextFormat("Total Attempts: %d", totalTrials);
             const char* accuracyStr = TextFormat("Final Accuracy: %.1f%%", finalAccuracy);
@@ -251,19 +213,17 @@ public:
             DrawText("Press [SPACE] to Try Again", SCREEN_WIDTH / 2 - MeasureText("Press [SPACE] to Try Again", 20) / 2, 480, 20, MakeColor(130, 130, 130, 255));
 
         } else if (currentScene == STATE_PLAYING) {
-            // SCENE: ACTIVE RUNNING GAME LOOP
-            DrawText("STROOP TEST", 40, 30, 24, MakeColor(130, 130, 130, 255));
-            
+            DrawText("STROOP TEST", 40, 35, 24, MakeColor(130, 130, 130, 255));
             const char* scoreText = TextFormat("Score: %d", score);
-            DrawText(scoreText, 240, 30, 24, MakeColor(245, 245, 245, 255));
+            DrawText(scoreText, 240, 35, 24, MakeColor(245, 245, 245, 255));
 
             float accuracy = (totalTrials > 0) ? ((float)score / totalTrials) * 100.0f : 0.0f;
             const char* accuracyText = TextFormat("Accuracy: %.0f%%", accuracy);
-            DrawText(accuracyText, 410, 30, 24, MakeColor(0, 228, 48, 255));
+            DrawText(accuracyText, 410, 35, 24, MakeColor(0, 228, 48, 255));
 
             const char* timerText = TextFormat("Time: %.1fs", timeRemaining);
             Color timerColor = (timeRemaining <= 5.0f) ? MakeColor(230, 41, 55, 255) : MakeColor(253, 249, 0, 255);
-            DrawText(timerText, SCREEN_WIDTH - MeasureText(timerText, 24) - 40, 30, 24, timerColor);
+            DrawText(timerText, SCREEN_WIDTH - MeasureText(timerText, 24) - 40, 35, 24, timerColor);
 
             DrawLine(40, 75, SCREEN_WIDTH - 40, 75, MakeColor(45, 45, 61, 255));
 
@@ -276,37 +236,25 @@ public:
             } else {
                 const char* textToDraw = GetColorName(currentWordIdx);
                 Color inkColor = GetColorValue(currentColorIdx);
-                
                 int textWidth = MeasureText(textToDraw, 64);
                 DrawText(textToDraw, SCREEN_WIDTH / 2 - textWidth / 2, SCREEN_HEIGHT / 2 - 40, 64, inkColor);
             }
 
             DrawText("Click the button that matches the INK COLOR!", SCREEN_WIDTH / 2 - MeasureText("Click the button that matches the INK COLOR!", 20) / 2, 380, 20, MakeColor(200, 200, 200, 255));
 
-            for (int i = 0; i < COLOR_COUNT; i++) {
-                buttons[i].Draw();
-            }
+            for (int i = 0; i < COLOR_COUNT; i++) buttons[i].Draw();
         }
 
         EndDrawing();
     }
 };
 
-// ==========================================
-// 3. MAIN APPLICATION ENTRY
-// ==========================================
-int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raylib Cognitive Stroop Test");
-    SetTargetFPS(60);
-    srand(time(NULL)); 
-
+void RunStroopTest() {
+    SetWindowSize(800, 600);
     StroopGame game;
-
     while (!WindowShouldClose()) {
+        if (IsKeyPressed(KEY_ESCAPE)) break;
         game.Update();
         game.Draw();
     }
-
-    CloseWindow();
-    return 0;
 }
