@@ -37,27 +37,53 @@ class InputBox {
     char buf[64];
     int  len;
 public:
+    bool backspacedEmpty;
+public:
     InputBox() { clear(); }
-    void clear() { memset(buf, 0, 64); len = 0; }
-    void update() {
-        if (IsKeyPressed(KEY_BACKSPACE) && len > 0) buf[--len] = '\0';
-        for (int c = GetCharPressed(); c; c = GetCharPressed())
-            if (c > 32 && c < 127 && len < 62) { buf[len++] = c; buf[len] = '\0'; }
+    void clear() { memset(buf, 0, 64); len = 0; backspacedEmpty = false; }
+    void setText(const char* s) {
+        clear();
+        for (int i = 0; s[i] && len < 62; i++) buf[len++] = s[i];
+        buf[len] = '\0';
     }
-    const char* text() const { return buf; }
+    // Returns the character just typed (0 if none or backspace)
+    int update() {
+        backspacedEmpty = false;
+        if (IsKeyPressed(KEY_BACKSPACE)) {
+            if (len > 0) buf[--len] = '\0';
+            else backspacedEmpty = true;
+            return 0;
+        }
+        int typed = 0;
+        int c = GetCharPressed();
+        if (c > 32 && c < 127 && len < 62) {
+            buf[len++] = c; buf[len] = '\0';
+            typed = c;
+        }
+        // drain extra chars in same frame (shouldn't happen but keep clean)
+        while (GetCharPressed()) {}
+        return typed;
+    }
+    const char* text()        const { return buf; }
+    bool        wantsGoBack() const { return backspacedEmpty; }
 };
 
 // ── 3. Stats ──────────────────────────────────────────────────
 class Stats {
-    int correct, wrong;
+    int correctKeys, wrongKeys, correctWords;
 public:
     Stats() { reset(); }
-    void  reset()              { correct = wrong = 0; }
-    void  record(bool ok)      { ok ? correct++ : wrong++; }
-    float wpm(float s)   const { return s > 0 ? correct / (s / 60.f) : 0.f; }
-    float accuracy()     const { int t=correct+wrong; return t ? correct*100.f/t : 100.f; }
-    int   getCorrect()   const { return correct; }
-    int   getWrong()     const { return wrong; }
+    void  reset()                   { correctKeys = wrongKeys = correctWords = 0; }
+    void  recordKey(bool ok)        { ok ? correctKeys++ : wrongKeys++; }
+    void  recordWord()              { correctWords++; }
+    float wpm(float s)        const { return s > 0 ? correctWords / (s / 60.f) : 0.f; }
+    // accuracy = correct keystrokes out of all keystrokes ever typed
+    float accuracy()          const {
+        int t = correctKeys + wrongKeys;
+        return t ? correctKeys * 100.f / t : 100.f;
+    }
+    int getCorrectWords()     const { return correctWords; }
+    int getWrongKeys()        const { return wrongKeys; }
 };
 
 // ── 4. Timer ──────────────────────────────────────────────────
@@ -83,7 +109,7 @@ class TypingTest {
     enum { WAIT, PLAY, DONE } state;
 
     void submit() {
-        stats.record(strcmp(input.text(), wb.current()) == 0);
+        if (strcmp(input.text(), wb.current()) == 0) stats.recordWord();
         wb.advance();
         input.clear();
     }
@@ -130,7 +156,15 @@ public:
         } else if (state == PLAY) {
             timer.update(dt);
             if (timer.finished()) { state = DONE; return; }
-            input.update();
+
+            int typed = input.update();
+            if (typed != 0) {
+                // position of this new char in the word = current input length - 1
+                int pos = (int)strlen(input.text()) - 1;
+                const char* target = wb.current();
+                bool ok = (target[pos] != '\0' && typed == target[pos]);
+                stats.recordKey(ok);
+            }
             if (IsKeyPressed(KEY_SPACE)) submit();
         } else {
             if (IsKeyPressed(KEY_ENTER)) state = WAIT;
@@ -156,18 +190,18 @@ public:
             drawParagraph();
             drawInput();
             char s[128];
-            sprintf(s, "WPM: %.0f   Accuracy: %.0f%%   Correct: %d   Wrong: %d",
+            sprintf(s, "WPM: %.0f   Accuracy: %.0f%%   Correct Words: %d   Miskeys: %d",
                 stats.wpm(timer.elapsed()), stats.accuracy(),
-                stats.getCorrect(), stats.getWrong());
+                stats.getCorrectWords(), stats.getWrongKeys());
             DrawText(s, 50, 390, 20, SKYBLUE);
             DrawText("SPACE = submit word", 50, 550, 16, DARKGRAY);
         }
         else {
             DrawText("Time's Up!", SW/2 - MeasureText("Time's Up!",48)/2, 80, 48, GOLD);
             char r[256];
-            sprintf(r, "WPM:       %.1f\nAccuracy:  %.1f%%\nCorrect:   %d\nWrong:     %d",
+            sprintf(r, "WPM:            %.1f\nAccuracy:       %.1f%%\nCorrect Words:  %d\nMiskeys:        %d",
                 stats.wpm(timer.elapsed()), stats.accuracy(),
-                stats.getCorrect(), stats.getWrong());
+                stats.getCorrectWords(), stats.getWrongKeys());
             DrawText(r, SW/2 - 120, 200, 28, WHITE);
             DrawText("ENTER to restart",
                 SW/2 - MeasureText("ENTER to restart",22)/2, 450, 22, YELLOW);
@@ -184,4 +218,3 @@ int main() {
     CloseWindow();
     return 0;
 }
-//test
