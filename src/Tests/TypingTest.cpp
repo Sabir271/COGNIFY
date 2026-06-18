@@ -6,14 +6,37 @@
 
 static const int   SW = 1000, SH = 600;
 static const float TEST_TIME = 30.0f;
-static const int   POOL = 50, BUF = 200;
+static const int   POOL = 200, BUF = 400;
 
 static const char* WORDS[POOL] = {
+    // 1–2 letter
+    "a","i","is","it","in","on","at","be","do","go",
+    "he","me","my","no","of","or","so","to","up","us",
+    "we","an","as","by","if","ok","hi","oh","am","any",
+
+    // 3 letter
     "the","and","for","are","but","not","you","all","can","had",
     "her","was","one","our","out","day","get","has","him","his",
-    "how","man","new","now","old","see","two","way","who","boy",
-    "did","its","let","put","say","she","too","use","dad","age",
-    "ago","aim","air","ask","bat","bed","big","bit","box","bus"
+    "how","man","new","now","old","see","two","way","who","use",
+
+    // 4 letter
+    "that","this","with","they","from","word","have","just","know","time",
+    "some","good","your","when","then","them","also","back","into","look",
+    "come","here","make","most","over","such","well","work","very","will",
+
+    // 5 letter
+    "about","there","which","their","would","other","after","these","first","think",
+    "could","great","every","right","place","small","found","still","where","those",
+    "large","often","point","world","write","never","under","while","house","water",
+
+    // 6 letter
+    "people","should","always","before","around","things","better","little","really","almost",
+    "school","mother","father","friend","summer","follow","simple","across","behind","change",
+    "family","listen","number","system","toward","travel","strong","enough","finger","happen",
+
+    // 7+ letter
+    "because","between","another","through","someone","problem","nothing","without","usually","already","station","present","machine","hundred","million","process",
+    "support","evening","reading","special","message","natural","together","remember","sentence","question"
 };
 
 // ── 1. WordBuffer ─────────────────────────────────────────────
@@ -111,22 +134,26 @@ class TypingTest {
         input.clear();
     }
 
-    void drawParagraph() {
-        int x = 50, y = 110, lw = 0;
-        for (int i = wb.index(); i < wb.index() + 28 && i < BUF; i++) {
-            const char* w = wb.get(i);
-            bool cur = (i == wb.index());
-            Color col = cur ? YELLOW : LIGHTGRAY;
-            if (cur) {
-                Color hi = {255, 255, 0, 40};   
-                DrawRectangle(x-2, y-2, MeasureText(w, 22)+4, 26, hi);
-            }
-            DrawText(w, x, y, 22, col);
-            x  += MeasureText(w, 22) + 10;
-            lw += MeasureText(w, 22) + 10;
-            if (lw > SW - 100) { x = 50; y += 34; lw = 0; }
+  void drawParagraph() {
+    int x = 50, y = 110, lw = 0;
+    for (int i = 0; i < BUF && i < wb.index() + 60; i++) {
+        const char* w = wb.get(i);
+        int cur = wb.index();
+        Color col;
+        if (i < cur)       col = {100, 100, 100, 255};
+        else if (i == cur) col = YELLOW;
+        else               col = LIGHTGRAY;
+
+        if (i == cur) {
+            Color hi = {255, 255, 0, 40};
+            DrawRectangle(x-2, y-2, MeasureText(w, 22)+4, 26, hi);
         }
+        DrawText(w, x, y, 22, col);
+        x  += MeasureText(w, 22) + 10;
+        lw += MeasureText(w, 22) + 10;
+        if (lw > SW - 100) { x = 50; y += 34; lw = 0; }
     }
+}
 
     void drawInput() {
         DrawRectangleLines(50, 290, SW - 100, 55, WHITE);
@@ -174,7 +201,7 @@ public:
         ClearBackground(bg);
 
         // UI Anchor Tip
-        DrawText("Press ESC to Exit to Main Menu", 20, 15, 16, GRAY);
+        DrawText("Press ESC to Exit to Main Menu | F11 for Fullscreen", 20, 15, 16, GRAY);
 
         if (state == WAIT) {
             const char* msg = "Press any key to start the 30-second test!";
@@ -218,7 +245,8 @@ void RunTypingTest() {
     
     while (!WindowShouldClose()) {
         // Look for the absolute exit flag
-        if (IsKeyPressed(KEY_ESCAPE)) break; 
+        if (IsKeyPressed(KEY_ESCAPE)) break;
+        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
         
         game.update();
         game.draw();

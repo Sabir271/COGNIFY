@@ -4,5 +4,8 @@
 // Declarations of our game loops
 void RunTypingTest();
 void RunStroopTest();
+void RunVerbalTest();
+void RunReactionTime();
+void RunNumberMemory();
 
 #endif

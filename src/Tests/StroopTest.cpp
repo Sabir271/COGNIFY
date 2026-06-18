@@ -174,7 +174,7 @@ public:
         ClearBackground(MakeColor(17, 17, 24, 255)); 
 
         // UI Anchor Tip
-        DrawText("Press ESC to Exit to Main Menu", 20, 10, 14, MakeColor(120, 120, 120, 255));
+        DrawText("Press ESC to Exit to Main Menu | F11 for Fullscreen", 20, 10, 14, MakeColor(120, 120, 120, 255));
 
         if (currentScene == STATE_START) {
             DrawText("STROOP COGNITIVE TEST", SCREEN_WIDTH / 2 - MeasureText("STROOP COGNITIVE TEST", 38) / 2, 140, 38, MakeColor(253, 249, 0, 255));
@@ -254,6 +254,7 @@ void RunStroopTest() {
     StroopGame game;
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_ESCAPE)) break;
+        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
         game.Update();
         game.Draw();
     }
