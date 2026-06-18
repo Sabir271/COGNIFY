@@ -35,8 +35,11 @@ static const char* WORDS[POOL] = {
     "family","listen","number","system","toward","travel","strong","enough","finger","happen",
 
     // 7+ letter
-    "because","between","another","through","someone","problem","nothing","without","usually","already","station","present","machine","hundred","million","process",
-    "support","evening","reading","special","message","natural","together","remember","sentence","question"
+    "because","between","another","through","someone","problem","nothing","without","example","kitchen",
+    "quickly","quietly","outside","morning","usually","already","however","student","teacher","country",
+    "brother","chapter","forward","general","history","several","thought","tonight","product","running",
+    "station","present","machine","hundred","million","process","quality","support","evening","reading",
+    "special","message","picture","natural","business","practice","together","remember","sentence","question"
 };
 
 // ── 1. WordBuffer ─────────────────────────────────────────────
@@ -201,7 +204,7 @@ public:
         ClearBackground(bg);
 
         // UI Anchor Tip
-        DrawText("Press ESC to Exit to Main Menu | F11 for Fullscreen", 20, 15, 16, GRAY);
+        DrawText("Press ESC to Exit to Main Menu", 20, 15, 16, GRAY);
 
         if (state == WAIT) {
             const char* msg = "Press any key to start the 30-second test!";
@@ -245,8 +248,7 @@ void RunTypingTest() {
     
     while (!WindowShouldClose()) {
         // Look for the absolute exit flag
-        if (IsKeyPressed(KEY_ESCAPE)) break;
-        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+        if (IsKeyPressed(KEY_ESCAPE)) break; 
         
         game.update();
         game.draw();
