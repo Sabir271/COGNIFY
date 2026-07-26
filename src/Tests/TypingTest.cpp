@@ -1,10 +1,10 @@
-#include "raylib.h"
+#include "UIStyle.h"
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
 #include <cstdio>
 
-static const int   SW = 1000, SH = 600;
+static const int   START_SW = 1200, START_SH = 800;
 static const float TEST_TIME = 30.0f;
 static const int   POOL = 200, BUF = 400;
 
@@ -138,7 +138,15 @@ class TypingTest {
     }
 
   void drawParagraph() {
-    int x = 50, y = 110, lw = 0;
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+    int panelLeft = (int)(sw * 0.08f);
+    int panelRight = (int)(sw * 0.92f);
+    int maxWidth = panelRight - panelLeft;
+    int x = panelLeft;
+    int y = (int)(sh * 0.23f);
+    int lineWidth = 0;
+
     for (int i = 0; i < BUF && i < wb.index() + 60; i++) {
         const char* w = wb.get(i);
         int cur = wb.index();
@@ -147,26 +155,41 @@ class TypingTest {
         else if (i == cur) col = YELLOW;
         else               col = LIGHTGRAY;
 
+        int wordWidth = MeasureTextUI(w, 22);
         if (i == cur) {
             Color hi = {255, 255, 0, 40};
-            DrawRectangle(x-2, y-2, MeasureText(w, 22)+4, 26, hi);
+            DrawRectangle(x - 2, y - 2, wordWidth + 4, 26, hi);
         }
-        DrawText(w, x, y, 22, col);
-        x  += MeasureText(w, 22) + 10;
-        lw += MeasureText(w, 22) + 10;
-        if (lw > SW - 100) { x = 50; y += 34; lw = 0; }
+
+        DrawTextUI(w, x, y, 22, col);
+        x += wordWidth + 10;
+        lineWidth += wordWidth + 10;
+
+        if (lineWidth > maxWidth) {
+            x = panelLeft;
+            y += 34;
+            lineWidth = 0;
+        }
     }
 }
 
     void drawInput() {
-        DrawRectangleLines(50, 290, SW - 100, 55, WHITE);
+        int sw = GetScreenWidth();
+        int sh = GetScreenHeight();
+        int boxX = (int)(sw * 0.08f);
+        int boxY = (int)(sh * 0.58f);
+        int boxW = (int)(sw * 0.84f);
+        int boxH = (int)(sh * 0.085f);
+
+        DrawRectangleRounded({(float)boxX, (float)boxY, (float)boxW, (float)boxH}, 0.20f, 16, Color{255, 255, 255, 18});
+        DrawRectangleRoundedLines({(float)boxX, (float)boxY, (float)boxW, (float)boxH}, 0.20f, 16, Color{255, 255, 255, 110});
         char p[64];
         sprintf(p, "Type: %s", wb.current());
-        DrawText(p, 58, 268, 18, GRAY);
+        DrawTextUI(p, boxX + 12, boxY - 26, 18, GRAY);
         bool ok = strncmp(input.text(), wb.current(), strlen(input.text())) == 0;
-        DrawText(input.text(), 60, 303, 22, ok ? GREEN : RED);
+        DrawTextUI(input.text(), boxX + 16, boxY + (boxH / 2) - 10, 22, ok ? GREEN : RED);
         if ((int)(GetTime() * 2) % 2 == 0)
-            DrawRectangle(60 + MeasureText(input.text(), 22), 302, 2, 24, WHITE);
+            DrawRectangle(boxX + 16 + MeasureTextUI(input.text(), 22), boxY + (boxH / 2) - 11, 2, 24, WHITE);
     }
 
 public:
@@ -199,42 +222,64 @@ public:
     }
 
     void draw() {
-        BeginDrawing();
-        Color bg = {18, 18, 24, 255};
-        ClearBackground(bg);
+        int sw = GetScreenWidth();
+        int sh = GetScreenHeight();
 
-        // UI Anchor Tip
-        DrawText("Press ESC to Exit to Main Menu", 20, 15, 16, GRAY);
+        BeginDrawing();
+        Color bgTop = {14, 18, 30, 255};
+        Color bgBottom = {26, 32, 56, 255};
+        DrawRectangleGradientV(0, 0, sw, sh, bgTop, bgBottom);
+        DrawCircle(sw * 0.12f, sh * 0.16f, sw * 0.072f, {255, 255, 255, 12});
+        DrawCircle(sw * 0.88f, sh * 0.86f, sw * 0.076f, {255, 255, 255, 10});
+
+        Rectangle topPanel = { sw * 0.04f, sh * 0.03f, sw * 0.92f, sh * 0.14f };
+        DrawPanel(topPanel, Color{255, 255, 255, 14}, Color{255, 255, 255, 85}, 0.30f, 18);
+        DrawTextUI("TYPING SPEED CHALLENGE", sw * 0.06f, sh * 0.05f, 30, WHITE);
+        DrawTextUI("Type accurately and keep the rhythm steady.", sw * 0.06f, sh * 0.09f, 18, Color{205, 215, 235, 220});
+
+        char t[16];
+        sprintf(t, "%.1f s", timer.timeLeft());
+        Color tc = timer.timeLeft() < 5.f ? RED : WHITE;
+        Rectangle timerPanel = { sw * 0.72f, sh * 0.045f, sw * 0.20f, sh * 0.08f };
+        DrawRectangleRounded(timerPanel, 0.22f, 12, Color{32, 44, 72, 220});
+        DrawRectangleRoundedLines(timerPanel, 0.22f, 12, Color{255, 255, 255, 100});
+        DrawTextUI("TIME LEFT", timerPanel.x + 16, timerPanel.y + 10, 16, Color{190, 210, 230, 190});
+        DrawTextUI(t, timerPanel.x + timerPanel.width * 0.5f - MeasureTextUI(t, 30) / 2, timerPanel.y + timerPanel.height * 0.35f, 30, tc);
+        DrawTextUI("s", timerPanel.x + timerPanel.width - 26, timerPanel.y + timerPanel.height * 0.35f, 30, tc);
+
+        DrawTextUI("Press ESC to Exit to Main Menu", sw * 0.06f, sh * 0.015f, 14, Color{170, 180, 200, 255});
 
         if (state == WAIT) {
-            const char* msg = "Press any key to start the 30-second test!";
-            const char* sub = "SPACE = submit each word";
-            DrawText(msg, SW/2 - MeasureText(msg,22)/2, SH/2-20, 22, WHITE);
-            DrawText(sub, SW/2 - MeasureText(sub,18)/2, SH/2+20, 18, GRAY);
+            Rectangle prompt = { sw * 0.18f, sh * 0.22f, sw * 0.64f, sh * 0.16f };
+            DrawPanel(prompt, Color{255, 255, 255, 20}, Color{255, 255, 255, 75}, 0.26f, 18);
+            DrawTextUI("Press any key to start the 30-second test!", sw/2 - MeasureTextUI("Press any key to start the 30-second test!",22)/2, sh * 0.28f, 22, WHITE);
+            DrawTextUI("SPACE = submit each word", sw/2 - MeasureTextUI("SPACE = submit each word",18)/2, sh * 0.33f, 18, Color{180, 190, 210, 255});
         }
         else if (state == PLAY) {
-            char t[16];
-            sprintf(t, "%.1f s", timer.timeLeft());
-            Color tc = timer.timeLeft() < 5.f ? RED : WHITE;
-            DrawText(t, SW/2 - MeasureText(t,36)/2, 30, 36, tc);
+            Rectangle content = { sw * 0.06f, sh * 0.19f, sw * 0.88f, sh * 0.62f };
+            DrawPanel(content, Color{255, 255, 255, 18}, Color{255, 255, 255, 75}, 0.26f, 18);
             drawParagraph();
             drawInput();
+
+            Rectangle footer = { sw * 0.06f, sh * 0.82f, sw * 0.88f, sh * 0.11f };
+            DrawPanel(footer, Color{255, 255, 255, 18}, Color{255, 255, 255, 95}, 0.24f, 16);
             char s[128];
-            sprintf(s, "WPM: %.0f   Accuracy: %.0f%%   Correct Words: %d   Miskeys: %d",
+            sprintf(s, "WPM: %.0f   Accuracy: %.0f%%   Correct: %d   Errors: %d",
                 stats.wpm(timer.elapsed()), stats.accuracy(),
                 stats.getCorrectWords(), stats.getWrongKeys());
-            DrawText(s, 50, 390, 20, SKYBLUE);
-            DrawText("SPACE = submit word", 50, 550, 16, DARKGRAY);
+            DrawTextUI(s, footer.x + 16, footer.y + 18, 20, SKYBLUE);
+            DrawTextUI("SPACE = submit word", footer.x + footer.width - MeasureTextUI("SPACE = submit word", 16) - 16, footer.y + 20, 16, Color{200, 210, 230, 200});
         }
         else {
-            DrawText("Time's Up!", SW/2 - MeasureText("Time's Up!",48)/2, 80, 48, GOLD);
+            Rectangle resultsPanel = { sw * 0.12f, sh * 0.18f, sw * 0.76f, sh * 0.40f };
+            DrawPanel(resultsPanel, Color{255, 255, 255, 18}, Color{255, 255, 255, 90}, 0.28f, 20);
+            DrawTextUI("Time's Up!", sw/2 - MeasureTextUI("Time's Up!",48)/2, sh * 0.22f, 48, GOLD);
             char r[256];
             sprintf(r, "WPM:            %.1f\nAccuracy:       %.1f%%\nCorrect Words:  %d\nMiskeys:        %d",
                 stats.wpm(timer.elapsed()), stats.accuracy(),
                 stats.getCorrectWords(), stats.getWrongKeys());
-            DrawText(r, SW/2 - 120, 200, 28, WHITE);
-            DrawText("ENTER to restart",
-                SW/2 - MeasureText("ENTER to restart",22)/2, 450, 22, YELLOW);
+            DrawTextUI(r, sw/2 - MeasureTextUI(r, 28) / 2, sh * 0.31f, 28, WHITE);
+            DrawTextUI("ENTER to restart", sw/2 - MeasureTextUI("ENTER to restart",22)/2, sh * 0.55f, 22, YELLOW);
         }
         EndDrawing();
     }
@@ -242,14 +287,12 @@ public:
 
 // WRITE/EDIT YOUR CODES ABOVE THIS LINE ONLY DO NOT EDIT THIS BLOCK OF CODE!!!
 void RunTypingTest() {
-    // Dynamic resizing window trick to fit the text design gracefully
-    SetWindowSize(1000, 600); 
+    SetWindowSize(START_SW, START_SH);
     TypingTest game;
-    
+
     while (!WindowShouldClose()) {
-        // Look for the absolute exit flag
-        if (IsKeyPressed(KEY_ESCAPE)) break; 
-        
+        if (IsKeyPressed(KEY_ESCAPE)) break;
+
         game.update();
         game.draw();
     }

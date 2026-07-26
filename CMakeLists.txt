@@ -29,6 +29,7 @@ add_executable(COGNIFY
     src/Tests/ReactionTime.cpp
     src/Tests/VerbalTest.cpp
     src/Tests/NumberMemory.cpp
+    src/UIStyle.cpp
 )
 
 target_include_directories(COGNIFY PRIVATE 
@@ -37,3 +38,9 @@ target_include_directories(COGNIFY PRIVATE
 )
 
 target_link_libraries(COGNIFY raylib)
+
+# Avoid clashing with a running COGNIFY.exe (locked on Windows):
+# write a different runtime output name so linking won't fail if the original
+# executable is running. This keeps the target name `COGNIFY` but produces
+# `COGNIFY_build.exe` as the actual output binary.
+set_target_properties(COGNIFY PROPERTIES RUNTIME_OUTPUT_NAME "COGNIFY_build")

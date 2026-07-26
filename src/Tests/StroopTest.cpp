@@ -1,9 +1,7 @@
-#include "raylib.h"
+#include "UIStyle.h"
 #include <stdlib.h>
 #include <time.h>
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
 const int COLOR_COUNT = 5;
 
 enum GameState {
@@ -77,19 +75,37 @@ public:
 class StroopGame {
 private:
     ColorButton buttons[COLOR_COUNT];
-    int currentWordIdx;  
-    int currentColorIdx; 
+    int currentWordIdx;
+    int currentColorIdx;
     int score;
     int totalTrials;
     bool showFeedback;
     bool lastAnswerCorrect;
     float feedbackTimer;
     float timeRemaining;
-    GameState currentScene; 
+    GameState currentScene;
 
     void NextTrial() {
         currentWordIdx = rand() % COLOR_COUNT;
         currentColorIdx = rand() % COLOR_COUNT;
+    }
+
+    void UpdateButtonLayout(int sw, int sh) {
+        float btnWidth = sw * 0.12f;
+        if (btnWidth < 90) btnWidth = 90;
+        if (btnWidth > 160) btnWidth = 160;
+        float btnHeight = sh * 0.09f;
+        if (btnHeight < 50) btnHeight = 50;
+        if (btnHeight > 90) btnHeight = 90;
+        float spacing = btnWidth * 0.18f;
+        float totalWidth = (COLOR_COUNT * btnWidth) + ((COLOR_COUNT - 1) * spacing);
+        float startX = (sw - totalWidth) / 2.0f;
+        float btnY = sh * 0.72f;
+
+        for (int i = 0; i < COLOR_COUNT; i++) {
+            float posX = startX + i * (btnWidth + spacing);
+            buttons[i].Setup(posX, btnY, btnWidth, btnHeight, i, GetColorValue(i));
+        }
     }
 
     const char* GetEvaluationGrade() {
@@ -101,20 +117,12 @@ private:
 
 public:
     StroopGame() {
-        currentScene = STATE_START; 
+        currentScene = STATE_START;
         score = 0; totalTrials = 0;
         showFeedback = false; lastAnswerCorrect = false;
         feedbackTimer = 0.0f; timeRemaining = 30.0f;
 
-        float btnWidth = 110.0f; float btnHeight = 60.0f; float spacing = 20.0f;
-        float totalWidth = (COLOR_COUNT * btnWidth) + ((COLOR_COUNT - 1) * spacing);
-        float startX = (SCREEN_WIDTH - totalWidth) / 2.0f;
-        float btnY = 450.0f;
-
-        for (int i = 0; i < COLOR_COUNT; i++) {
-            float posX = startX + i * (btnWidth + spacing);
-            buttons[i].Setup(posX, btnY, btnWidth, btnHeight, i, GetColorValue(i));
-        }
+        UpdateButtonLayout(GetScreenWidth(), GetScreenHeight());
     }
 
     void StartNewSession() {
@@ -171,76 +179,102 @@ public:
 
     void Draw() {
         BeginDrawing();
-        ClearBackground(MakeColor(17, 17, 24, 255)); 
+        int sw = GetScreenWidth();
+        int sh = GetScreenHeight();
+        UpdateButtonLayout(sw, sh);
 
-        // UI Anchor Tip
-        DrawText("Press ESC to Exit to Main Menu | F11 for Fullscreen", 20, 10, 14, MakeColor(120, 120, 120, 255));
+        Color bgTop = {14, 22, 38, 255};
+        Color bgBottom = {22, 32, 54, 255};
+        DrawRectangleGradientV(0, 0, sw, sh, bgTop, bgBottom);
+        DrawCircle((int)(sw*0.94f), (int)(sh*0.15f), (int)(sw*0.12f), {255, 255, 255, 10});
+        DrawCircle((int)(sw*0.12f), (int)(sh*0.82f), (int)(sw*0.08f), {255, 255, 255, 12});
+
+        float margin = sw * 0.05f;
+        Rectangle header = { margin, sh * 0.03f, sw - margin * 2.0f, sh * 0.14f };
+        DrawRectangleRounded(header, 0.30f, 18, {255, 255, 255, 14});
+        DrawRectangleRoundedLines(header, 0.30f, 18, {255, 255, 255, 60});
+        float headerCenteredY = header.y + header.height * 0.18f;
+        DrawText("STROOP COGNITIVE TEST", sw / 2 - MeasureText("STROOP COGNITIVE TEST", 36) / 2, headerCenteredY, 36, Color{255, 245, 140, 255});
+        DrawText("Match the ink color, not the word meaning.", sw / 2 - MeasureText("Match the ink color, not the word meaning.", 18) / 2, headerCenteredY + sh * 0.045f, 18, Color{210, 220, 240, 220});
+
+        DrawText("Press ESC to Exit | F11 for Fullscreen", margin, header.y + header.height - sh * 0.02f, 12, MakeColor(140, 140, 160, 255));
+
+        Rectangle mainCard = { sw * 0.08f, sh * 0.18f, sw * 0.84f, sh * 0.65f };
+        DrawRectangleRounded(mainCard, 0.28f, 18, {18, 28, 48, 220});
+        DrawRectangleRoundedLines(mainCard, 0.28f, 18, {255, 255, 255, 38});
 
         if (currentScene == STATE_START) {
-            DrawText("STROOP COGNITIVE TEST", SCREEN_WIDTH / 2 - MeasureText("STROOP COGNITIVE TEST", 38) / 2, 140, 38, MakeColor(253, 249, 0, 255));
-            DrawLine(100, 200, SCREEN_WIDTH - 100, 200, MakeColor(45, 45, 61, 255));
+            Rectangle rulesPanel = { mainCard.x + sw * 0.02f, mainCard.y + sh * 0.02f, mainCard.width - sw * 0.04f, mainCard.height - sh * 0.16f };
+            DrawRectangleRounded(rulesPanel, 0.26f, 18, {16, 24, 42, 220});
+            DrawRectangleRoundedLines(rulesPanel, 0.26f, 18, {255, 255, 255, 40});
 
             const char* rule1 = "1. Words will appear in random colors.";
             const char* rule2 = "2. Ignore what the text spells out completely!";
             const char* rule3 = "3. Click the bottom color button that matches the INK COLOR.";
-            const char* rule4 = "4. Race against the 30 second countdown timer clock.";
+            const char* rule4 = "4. Race against the 30 second countdown timer.";
 
-            DrawText(rule1, 120, 240, 20, MakeColor(245, 245, 245, 255));
-            DrawText(rule2, 120, 280, 20, MakeColor(230, 41, 55, 255)); 
-            DrawText(rule3, 120, 320, 20, MakeColor(245, 245, 245, 255));
-            DrawText(rule4, 120, 360, 20, MakeColor(245, 245, 245, 255));
+            DrawText(rule1, rulesPanel.x + sw * 0.02f, rulesPanel.y + sh * 0.04f, 22, MakeColor(245, 245, 245, 255));
+            DrawText(rule2, rulesPanel.x + sw * 0.02f, rulesPanel.y + sh * 0.10f, 22, MakeColor(230, 180, 255, 255));
+            DrawText(rule3, rulesPanel.x + sw * 0.02f, rulesPanel.y + sh * 0.16f, 22, MakeColor(245, 245, 245, 255));
+            DrawText(rule4, rulesPanel.x + sw * 0.02f, rulesPanel.y + sh * 0.22f, 22, MakeColor(245, 245, 245, 255));
 
-            DrawLine(100, 420, SCREEN_WIDTH - 100, 420, MakeColor(45, 45, 61, 255));
-            DrawText("Press [ENTER] or [SPACE] to Begin", SCREEN_WIDTH / 2 - MeasureText("Press [ENTER] or [SPACE] to Begin", 24) / 2, 470, 24, MakeColor(0, 228, 48, 255));
+            DrawText("Press [ENTER] or [SPACE] to Begin", sw / 2 - MeasureText("Press [ENTER] or [SPACE] to Begin", 24) / 2, rulesPanel.y + rulesPanel.height - sh * 0.05f, 24, MakeColor(130, 255, 180, 255));
 
         } else if (currentScene == STATE_GAMEOVER) {
-            DrawText("TEST COMPLETE", SCREEN_WIDTH / 2 - MeasureText("TEST COMPLETE", 36) / 2, 100, 36, MakeColor(253, 249, 0, 255));
-            DrawLine(150, 160, SCREEN_WIDTH - 150, 160, MakeColor(45, 45, 61, 255));
+            Rectangle resultPanel = { mainCard.x + sw * 0.02f, mainCard.y + sh * 0.02f, mainCard.width - sw * 0.04f, mainCard.height - sh * 0.04f };
+            DrawRectangleRounded(resultPanel, 0.28f, 20, {28, 40, 66, 220});
+            DrawRectangleRoundedLines(resultPanel, 0.28f, 20, {255, 255, 255, 60});
+
+            DrawText("TEST COMPLETE", sw / 2 - MeasureText("TEST COMPLETE", 36) / 2, resultPanel.y + sh * 0.04f, 36, MakeColor(255, 225, 120, 255));
+            DrawLine(resultPanel.x + sw * 0.03f, resultPanel.y + sh * 0.10f, resultPanel.x + resultPanel.width - sw * 0.03f, resultPanel.y + sh * 0.10f, MakeColor(80, 95, 130, 255));
 
             float finalAccuracy = (totalTrials > 0) ? ((float)score / totalTrials) * 100.0f : 0.0f;
             const char* finalScoreStr = TextFormat("Correct Answers: %d", score);
             const char* totalAttemptsStr = TextFormat("Total Attempts: %d", totalTrials);
             const char* accuracyStr = TextFormat("Final Accuracy: %.1f%%", finalAccuracy);
 
-            DrawText(finalScoreStr, SCREEN_WIDTH / 2 - MeasureText(finalScoreStr, 24) / 2, 210, 24, MakeColor(245, 245, 245, 255));
-            DrawText(totalAttemptsStr, SCREEN_WIDTH / 2 - MeasureText(totalAttemptsStr, 24) / 2, 255, 24, MakeColor(180, 180, 180, 255));
-            DrawText(accuracyStr, SCREEN_WIDTH / 2 - MeasureText(accuracyStr, 24) / 2, 300, 24, MakeColor(0, 228, 48, 255));
+            DrawText(finalScoreStr, sw / 2 - MeasureText(finalScoreStr, 24) / 2, resultPanel.y + sh * 0.15f, 24, MakeColor(245, 245, 245, 255));
+            DrawText(totalAttemptsStr, sw / 2 - MeasureText(totalAttemptsStr, 24) / 2, resultPanel.y + sh * 0.21f, 24, MakeColor(200, 200, 220, 255));
+            DrawText(accuracyStr, sw / 2 - MeasureText(accuracyStr, 24) / 2, resultPanel.y + sh * 0.27f, 24, MakeColor(120, 255, 170, 255));
 
             const char* evaluationText = GetEvaluationGrade();
-            DrawText(evaluationText, SCREEN_WIDTH / 2 - MeasureText(evaluationText, 22) / 2, 380, 22, MakeColor(200, 122, 255, 255));
+            DrawText(evaluationText, sw / 2 - MeasureText(evaluationText, 22) / 2, resultPanel.y + sh * 0.34f, 22, MakeColor(190, 145, 255, 255));
 
-            DrawLine(150, 440, SCREEN_WIDTH - 150, 440, MakeColor(45, 45, 61, 255));
-            DrawText("Press [SPACE] to Try Again", SCREEN_WIDTH / 2 - MeasureText("Press [SPACE] to Try Again", 20) / 2, 480, 20, MakeColor(130, 130, 130, 255));
+            DrawText("Press [SPACE] to Try Again", sw / 2 - MeasureText("Press [SPACE] to Try Again", 20) / 2, resultPanel.y + sh * 0.44f, 20, MakeColor(180, 190, 210, 255));
 
         } else if (currentScene == STATE_PLAYING) {
-            DrawText("STROOP TEST", 40, 35, 24, MakeColor(130, 130, 130, 255));
+            Rectangle playPanel = { mainCard.x + sw * 0.02f, mainCard.y + sh * 0.02f, mainCard.width - sw * 0.04f, mainCard.height - sh * 0.12f };
+            DrawRectangleRounded(playPanel, 0.26f, 18, {18, 28, 48, 220});
+            DrawRectangleRoundedLines(playPanel, 0.26f, 18, {255, 255, 255, 40});
+            // Title centered at top of play area
+            DrawText("STROOP TEST", sw / 2 - MeasureText("STROOP TEST", 26) / 2, playPanel.y + sh * 0.02f, 26, MakeColor(180, 180, 200, 255));
+
+            // Compact stat row (right side)
             const char* scoreText = TextFormat("Score: %d", score);
-            DrawText(scoreText, 240, 35, 24, MakeColor(245, 245, 245, 255));
+            DrawText(scoreText, playPanel.x + playPanel.width - MeasureText(scoreText, 20) - sw * 0.03f, playPanel.y + sh * 0.02f, 20, MakeColor(245, 245, 245, 255));
 
             float accuracy = (totalTrials > 0) ? ((float)score / totalTrials) * 100.0f : 0.0f;
-            const char* accuracyText = TextFormat("Accuracy: %.0f%%", accuracy);
-            DrawText(accuracyText, 410, 35, 24, MakeColor(0, 228, 48, 255));
+            const char* accuracyText = TextFormat("Acc: %.0f%%", accuracy);
+            DrawText(accuracyText, playPanel.x + playPanel.width - MeasureText(accuracyText, 18) - sw * 0.22f, playPanel.y + sh * 0.02f, 18, MakeColor(120, 255, 160, 255));
 
             const char* timerText = TextFormat("Time: %.1fs", timeRemaining);
             Color timerColor = (timeRemaining <= 5.0f) ? MakeColor(230, 41, 55, 255) : MakeColor(253, 249, 0, 255);
-            DrawText(timerText, SCREEN_WIDTH - MeasureText(timerText, 24) - 40, 35, 24, timerColor);
-
-            DrawLine(40, 75, SCREEN_WIDTH - 40, 75, MakeColor(45, 45, 61, 255));
+            DrawText(timerText, playPanel.x + playPanel.width - MeasureText(timerText, 20) - sw * 0.03f, playPanel.y + playPanel.height - sh * 0.06f, 20, timerColor);
 
             if (showFeedback) {
                 if (lastAnswerCorrect) {
-                    DrawText("CORRECT!", SCREEN_WIDTH / 2 - MeasureText("CORRECT!", 48) / 2, SCREEN_HEIGHT / 2 - 40, 48, MakeColor(0, 228, 48, 255));
+                    DrawText("CORRECT!", sw / 2 - MeasureText("CORRECT!", 48) / 2, playPanel.y + playPanel.height * 0.48f, 48, MakeColor(0, 228, 48, 255));
                 } else {
-                    DrawText("WRONG!", SCREEN_WIDTH / 2 - MeasureText("WRONG!", 48) / 2, SCREEN_HEIGHT / 2 - 40, 48, MakeColor(190, 33, 61, 255));
+                    DrawText("WRONG!", sw / 2 - MeasureText("WRONG!", 48) / 2, playPanel.y + playPanel.height * 0.48f, 48, MakeColor(190, 33, 61, 255));
                 }
             } else {
                 const char* textToDraw = GetColorName(currentWordIdx);
                 Color inkColor = GetColorValue(currentColorIdx);
                 int textWidth = MeasureText(textToDraw, 64);
-                DrawText(textToDraw, SCREEN_WIDTH / 2 - textWidth / 2, SCREEN_HEIGHT / 2 - 40, 64, inkColor);
+                DrawText(textToDraw, sw / 2 - textWidth / 2, playPanel.y + playPanel.height * 0.48f, 64, inkColor);
             }
 
-            DrawText("Click the button that matches the INK COLOR!", SCREEN_WIDTH / 2 - MeasureText("Click the button that matches the INK COLOR!", 20) / 2, 380, 20, MakeColor(200, 200, 200, 255));
+            DrawText("Click the button that matches the INK COLOR!", sw / 2 - MeasureText("Click the button that matches the INK COLOR!", 20) / 2, playPanel.y + playPanel.height - sh * 0.04f, 20, MakeColor(200, 200, 220, 255));
 
             for (int i = 0; i < COLOR_COUNT; i++) buttons[i].Draw();
         }
@@ -250,7 +284,7 @@ public:
 };
 
 void RunStroopTest() {
-    SetWindowSize(800, 600);
+    SetWindowSize(1200, 800);
     StroopGame game;
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_ESCAPE)) break;
