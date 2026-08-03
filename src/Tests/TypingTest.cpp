@@ -287,11 +287,11 @@ public:
 
 // WRITE/EDIT YOUR CODES ABOVE THIS LINE ONLY DO NOT EDIT THIS BLOCK OF CODE!!!
 void RunTypingTest() {
-    SetWindowSize(START_SW, START_SH);
     TypingTest game;
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_ESCAPE)) break;
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
 
         game.update();
         game.draw();

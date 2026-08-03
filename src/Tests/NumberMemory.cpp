@@ -26,11 +26,6 @@ static string GenerateNumber(int digits)
 //--------------------------------------------------
 void RunNumberMemory()
 {
-    const int screenWidth = 1200;
-    const int screenHeight = 800;
-
-    SetWindowSize(screenWidth, screenHeight);
-
     enum GameState { SHOW_NUMBER, USER_INPUT, GAME_OVER };
 
     GameState state = SHOW_NUMBER;
@@ -49,7 +44,7 @@ void RunNumberMemory()
     while (!WindowShouldClose())
     {
         if (IsKeyPressed(KEY_ESCAPE)) break;
-        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
         //--------------------------------------------------
         // UPDATE
         //--------------------------------------------------

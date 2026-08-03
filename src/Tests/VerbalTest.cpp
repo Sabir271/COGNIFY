@@ -233,7 +233,6 @@ public:
 
 void RunVerbalTest()
 {
-    SetWindowSize(1200, 800);
     SetTargetFPS(60);
 
     Game game;
@@ -241,6 +240,7 @@ void RunVerbalTest()
     while (!WindowShouldClose())
     {
         if (IsKeyPressed(KEY_ESCAPE)) break;
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
 
         game.Update();
 

@@ -284,11 +284,10 @@ public:
 };
 
 void RunStroopTest() {
-    SetWindowSize(1200, 800);
     StroopGame game;
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_ESCAPE)) break;
-        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
         game.Update();
         game.Draw();
     }

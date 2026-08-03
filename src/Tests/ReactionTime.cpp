@@ -12,11 +12,6 @@ enum GameState
 // Expose as RunReactionTime for the hub
 void RunReactionTime()
 {
-    const int screenWidth = 1200;
-    const int screenHeight = 800;
-
-    // Use SetWindowSize so we don't reinitialize the window (hub already created it)
-    SetWindowSize(screenWidth, screenHeight);
     SetTargetFPS(60);
 
     GameState state = WAITING;
@@ -34,6 +29,8 @@ void RunReactionTime()
 
     while (!WindowShouldClose())
     {
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
+
         float dt = GetFrameTime();
         timer += dt;
 

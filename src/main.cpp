@@ -32,10 +32,21 @@ namespace {
 }
 
 int main() {
-    const int defaultWidth = 1200;
-    const int defaultHeight = 800;
+    const int defaultWidth = 1440;
+    const int defaultHeight = 900;
 
-    InitWindow(defaultWidth, defaultHeight, "Raylib Cognitive Brain Hub");
+    int monitor = GetCurrentMonitor();
+    int startWidth = defaultWidth;
+    int startHeight = defaultHeight;
+    int monitorWidth = GetMonitorWidth(monitor);
+    int monitorHeight = GetMonitorHeight(monitor);
+
+    if (startWidth > monitorWidth) startWidth = monitorWidth;
+    if (startHeight > monitorHeight) startHeight = monitorHeight;
+
+    InitWindow(startWidth, startHeight, "Raylib Cognitive Brain Hub");
+    SetWindowPosition((monitorWidth - startWidth) / 2, (monitorHeight - startHeight) / 2);
+    SetWindowMinSize(1280, 800);
     LoadUIFont();
     SetTargetFPS(60);
     srand(time(NULL));
@@ -48,11 +59,11 @@ int main() {
         {{0, 0, 0, 0}, {214, 92, 178, 255}, {236, 116, 198, 255}, "Verbal", "Word recall", "5"}
     };
     while (!WindowShouldClose()) {
-        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
+        if (IsKeyPressed(KEY_F11)) ToggleAppFullscreen();
 
         int screenWidth = GetScreenWidth();
         int screenHeight = GetScreenHeight();
-        bool fullscreen = IsWindowFullscreen();
+        bool fullscreen = IsAppFullscreen();
         int margin = 42;
         int heroHeight = screenHeight * 18 / 100;
         int cardWidth = screenWidth * 28 / 100;
@@ -81,8 +92,7 @@ int main() {
 
         if (CheckCollisionPointRec(mousePos, btnSettings) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             fullscreen = !fullscreen;
-            if (fullscreen) ToggleFullscreen();
-            else SetWindowSize(defaultWidth, defaultHeight);
+            SetAppFullscreen(fullscreen);
         }
 
         for (int i = 0; i < 5; ++i) {

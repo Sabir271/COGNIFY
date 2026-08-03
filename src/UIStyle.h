@@ -10,6 +10,9 @@ void UnloadUIFont();
 float MeasureTextUI(const char* text, float fontSize);
 void DrawTextUI(const char* text, float x, float y, float fontSize, Color color);
 void DrawTextUI(const char* text, Vector2 position, float fontSize, Color color);
+void SetAppFullscreen(bool enable);
+void ToggleAppFullscreen();
+bool IsAppFullscreen();
 
 // Note: avoid defining `MeasureText` to prevent collision with raylib's symbol.
 // Use `MeasureTextUI` to measure text using the loaded `uiFont`.
